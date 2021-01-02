@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
@@ -9,28 +10,21 @@ using Microsoft.Extensions.Logging;
 
 namespace LoadSimulator
 {
-    public static class Function1
+    public static class SimulateLoad
     {
         [FunctionName("Function1")]
-        public static async Task<List<string>> RunOrchestrator(
+        public static async Task RunOrchestrator(
             [OrchestrationTrigger] IDurableOrchestrationContext context)
         {
-            var outputs = new List<string>();
-
-            // Replace "hello" with the name of your Durable Activity Function.
-            outputs.Add(await context.CallActivityAsync<string>("Function1_Hello", "Tokyo"));
-            outputs.Add(await context.CallActivityAsync<string>("Function1_Hello", "Seattle"));
-            outputs.Add(await context.CallActivityAsync<string>("Function1_Hello", "London"));
-
-            // returns ["Hello Tokyo!", "Hello Seattle!", "Hello London!"]
-            return outputs;
+            await context.CallActivityAsync("SimulateLoad_SimulateTimeConsumingProcess", "");
         }
 
-        [FunctionName("Function1_Hello")]
-        public static string SayHello([ActivityTrigger] string name, ILogger log)
+        [FunctionName("SimulateLoad_SimulateTimeConsumingProcess")]
+        public static void SimulateTimeConsumingProcess([ActivityTrigger] string _, ILogger log)
         {
-            log.LogInformation($"Saying hello to {name}.");
-            return $"Hello {name}!";
+            log.LogInformation($"Starting time consuming process");
+            Thread.Sleep(20 * 1000);
+            log.LogInformation($"Finished time consuming process");
         }
 
         [FunctionName("Function1_HttpStart")]
