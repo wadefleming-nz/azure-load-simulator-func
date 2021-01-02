@@ -1,25 +1,23 @@
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.DurableTask;
 using Microsoft.Azure.WebJobs.Extensions.Http;
-//using Microsoft.Azure.WebJobs.Host;
 using Microsoft.Extensions.Logging;
 
 namespace LoadSimulator
 {
-    public static class SimulateLoad
+    public static class SimulateLoadFunction
     {
-        [FunctionName("Function1")]
+        [FunctionName("SimulateLoadFunction_Orchestrator")]
         public static async Task RunOrchestrator(
             [OrchestrationTrigger] IDurableOrchestrationContext context)
         {
-            await context.CallActivityAsync("SimulateLoad_SimulateTimeConsumingProcess", "");
+            await context.CallActivityAsync("SimulateLoadFunction_SimulateTimeConsumingProcess", "");
         }
 
-        [FunctionName("SimulateLoad_SimulateTimeConsumingProcess")]
+        [FunctionName("SimulateLoadFunction_SimulateTimeConsumingProcess")]
         public static void SimulateTimeConsumingProcess([ActivityTrigger] string _, ILogger log)
         {
             log.LogInformation($"Starting time consuming process");
@@ -27,14 +25,14 @@ namespace LoadSimulator
             log.LogInformation($"Finished time consuming process");
         }
 
-        [FunctionName("Function1_HttpStart")]
+        [FunctionName("SimulateLoadFunction_HttpStart")]
         public static async Task<HttpResponseMessage> HttpStart(
             [HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequestMessage req,
             [DurableClient] IDurableOrchestrationClient starter,
             ILogger log)
         {
             // Function input comes from the request content.
-            string instanceId = await starter.StartNewAsync("Function1", null);
+            string instanceId = await starter.StartNewAsync("SimulateLoadFunction_Orchestrator", null);
 
             log.LogInformation($"Started orchestration with ID = '{instanceId}'.");
 
